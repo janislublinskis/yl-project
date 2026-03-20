@@ -1,0 +1,203 @@
+# ═══════════════════════════════════════════════════════════════════
+#  YL Laravel — Docker Compose
+#
+#  Services:
+#    mysql      — shared MySQL 8 database
+#    rabbitmq   — shared RabbitMQ broker (management UI on :15672)
+#    server1    — PHP + Nginx, Products module only   → http://localhost:8001
+#    server2    — PHP + Nginx, Posts module only      → http://localhost:8002
+#    server3    — PHP + Nginx, both modules           → http://localhost:8003
+#    worker1/2/3 — queue workers for each server
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+
+  # ─────────────────────────────────────────
+  # Shared infrastructure
+  # ─────────────────────────────────────────
+
+  mysql:
+    image: mysql:8.0
+    container_name: yl_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - yl_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: yl_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI → http://localhost:15672
+    networks:
+      - yl_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # ─────────────────────────────────────────
+  # Server 1 — Products module only
+  # ─────────────────────────────────────────
+
+  server1:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVER: server1       # Bakes docker/server1/composer.json into the image
+    container_name: yl_server1
+    restart: unless-stopped
+    ports:
+      - "8001:80"
+    env_file:
+      - docker/server1/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - yl_network
+
+  worker1:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVER: server1
+    container_name: yl_worker1
+    restart: unless-stopped
+    # Override the default CMD to run the queue worker instead of nginx
+    command: ["php", "artisan", "queue:work", "rabbitmq", "--queue=default", "--sleep=3", "--tries=3", "--timeout=90"]
+    env_file:
+      - docker/server1/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - yl_network
+    environment:
+      SKIP_MIGRATE: "true"
+
+  # ─────────────────────────────────────────
+  # Server 2 — Posts module only
+  # ─────────────────────────────────────────
+
+  server2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVER: server2
+    container_name: yl_server2
+    restart: unless-stopped
+    ports:
+      - "8002:80"
+    env_file:
+      - docker/server2/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - yl_network
+
+  worker2:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVER: server2
+    container_name: yl_worker2
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "rabbitmq", "--queue=default", "--sleep=3", "--tries=3", "--timeout=90"]
+    env_file:
+      - docker/server2/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - yl_network
+    environment:
+      SKIP_MIGRATE: "true"
+
+  # ─────────────────────────────────────────
+  # Server 3 — Both modules
+  # ─────────────────────────────────────────
+
+  server3:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVER: server3
+    container_name: yl_server3
+    restart: unless-stopped
+    ports:
+      - "8003:80"
+    env_file:
+      - docker/server3/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - yl_network
+
+  worker3:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        SERVER: server3
+    container_name: yl_worker3
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "rabbitmq", "--queue=default", "--sleep=3", "--tries=3", "--timeout=90"]
+    env_file:
+      - docker/server3/.env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - yl_network
+    environment:
+      SKIP_MIGRATE: "true"
+
+# ─────────────────────────────────────────
+# Shared volumes & networks
+# ─────────────────────────────────────────
+
+volumes:
+  mysql_data:         # Persists MySQL data across container restarts
+
+networks:
+  yl_network:
+    driver: bridge

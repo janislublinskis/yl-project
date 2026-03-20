@@ -1,0 +1,61 @@
+{
+    "name": "yl/app-server2",
+    "description": "YL App — Server 2 (Posts module only)",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^11.50",
+        "laravel/tinker": "^2.10",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "^14.0",
+        "darkaonline/l5-swagger": "^8.6",
+        "yl/helper": "*",
+        "yl/posts": "*"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.13",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.1",
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.5",
+        "phparkitect/phparkitect": "^0.8"
+    },
+    "repositories": [
+        { "type": "path", "url": "./packages/yl/helper", "options": { "symlink": false } },
+        { "type": "path", "url": "./packages/yl/posts",  "options": { "symlink": false } }
+    ],
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": { "Tests\\": "tests/" }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ]
+    },
+    "extra": {
+        "laravel": { "dont-discover": [] }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

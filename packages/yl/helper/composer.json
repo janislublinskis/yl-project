@@ -1,0 +1,38 @@
+{
+    "name": "yl/helper",
+    "description": "YL Helper — shared utilities (ApiResponse, traits, BaseApiController) used by all YL modules",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^11.50"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.13",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.1",
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.5",
+        "phparkitect/phparkitect": "^0.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yl\\Helper\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Yl\\Helper\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Yl\\Helper\\HelperServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

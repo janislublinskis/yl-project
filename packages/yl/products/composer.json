@@ -1,0 +1,40 @@
+{
+    "name": "yl/products",
+    "description": "YL Products module — Product CRUD API with async RabbitMQ export job",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^11.50",
+        "yl/helper": "*",
+        "vladimir-yuldashev/laravel-queue-rabbitmq": "^14.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "fakerphp/faker": "^1.23",
+        "orchestra/testbench": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yl\\Products\\": "src/",
+            "Yl\\Products\\Database\\": "database/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Yl\\Products\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Yl\\Products\\ProductsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        { "type": "path", "url": "../helper", "options": { "symlink": false } }
+    ]
+}
