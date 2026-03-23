@@ -6,7 +6,7 @@ This document outlines the sequence in which each part of the project was planne
 
 ## 1. Project Scaffold — Laravel Skeleton
 
-The starting point was an empty directory. A fresh Laravel 12 application was initialised using the official installer, which created the standard skeleton: `app/`, `bootstrap/`, `config/`, `database/`, `public/`, `resources/`, `routes/`, `storage/`, and the root `composer.json`.
+The starting point was an empty directory. A fresh Laravel 11.5 application was initialised using the official installer, which created the standard skeleton: `app/`, `bootstrap/`, `config/`, `database/`, `public/`, `resources/`, `routes/`, `storage/`, and the root `composer.json`.
 
 The root `composer.json` was then stripped back so it only declares the Laravel framework itself and shared tooling (PHPUnit, Swagger, Arkitect). It intentionally does **not** reference any of the domain packages — those are injected per-server at build time.
 
@@ -136,16 +136,7 @@ command: ["php", "artisan", "queue:work", "rabbitmq", "--queue=default", "--slee
 
 Workers also set `SKIP_MIGRATE: "true"` so they skip the migration and Swagger steps — those are the server's responsibility. Workers start only after the server container's healthcheck passes.
 
-### Services at a Glance
-
-| Container | Port | Role |
-|---|---|---|
-| `yl_server1` | 8001 | Products API |
-| `yl_server2` | 8002 | Posts API |
-| `yl_server3` | 8003 | Full API |
-| `yl_worker1/2/3` | — | RabbitMQ consumers |
-| `yl_mysql` | 3306 | Shared MySQL 8 |
-| `yl_rabbitmq` | 5672 / 15672 | Message broker + Management UI |
+For a summary of all containers, ports, and installed modules see the **Servers & Modules** table in `README.md`.
 
 ---
 
@@ -194,34 +185,7 @@ Swagger UI is accessible at `http://localhost:800{1,2,3}/api/documentation`.
 
 ## 9. Makefile
 
-A `Makefile` was added to reduce the cognitive overhead of common Docker and development commands:
-
-```makefile
-make build          # Build all images
-make up             # Start all containers
-make down           # Stop all containers
-make reset          # down + remove volumes + build + up
-
-make rebuild-server1   # Rebuild only server1 image
-make rebuild-server2
-make rebuild-server3
-
-make logs              # Tail all container logs
-make logs-server1      # Tail a specific server
-make shell-server1     # Open a shell in server1
-
-make test              # Run all PHPUnit test suites
-make test-products
-make test-posts
-make test-helper
-
-make arch-test         # Run phparkitect checks
-make test-all          # PHPUnit + arkitect
-
-make migrate           # Run artisan migrate inside server3
-make swagger           # Regenerate Swagger docs inside server3
-make tinker            # Open tinker inside server3
-```
+A `Makefile` was added to reduce the cognitive overhead of common Docker and development commands. The full list of targets is documented in `README.md` under **Useful Commands**, and the targets themselves are readable directly in the `Makefile`.
 
 ---
 
@@ -276,10 +240,35 @@ Several version conflicts were encountered and resolved during the build process
 |---|---|--|
 | `laravel/framework` | `^12.0` | `laravel-queue-rabbitmq ^14` |
 | `vladimir-yuldashev/laravel-queue-rabbitmq` | `^14.0` |
-| `darkaonline/l5-swagger` | `^8.6` | Stable with Laravel 12 and PHP 8.3 |
+| `darkaonline/l5-swagger` | `^8.6` | Stable with Laravel 11.5 and PHP 8.3 |
 | `phparkitect/phparkitect` | `^0.8` | v0.8 is the current stable |
 | `phpunit/phpunit` | `^12.0` | Required for PHP 8.3 compatibility |
-| PHP base image | `php:8.3-fpm` | Laravel 12 requires PHP ≥ 8.2; 8.3 chosen for longevity |
+| PHP base image | `php:8.3-fpm` | Laravel 11.5 requires PHP ≥ 8.2; 8.3 chosen for longevity |
+
+---
+
+## 12. Design Decisions
+
+### Why path repositories instead of a private Packagist?
+Path repos resolve locally — no need to publish packages publicly during
+development. In production you would switch to a private registry
+(e.g. Private Packagist, Satis) and the `composer.json` would simply change
+the repository URL.
+
+### Why one Dockerfile with an ARG instead of three separate Dockerfiles?
+DRY — a single Dockerfile is easier to maintain. The `ARG SERVER` build
+argument selects which `composer.json` gets copied into the image at build time.
+Docker layer caching means only the changed `composer.json` layer rebuilds.
+
+### Why soft deletes?
+Soft deletes protect against accidental data loss and provide a natural
+audit trail. Permanently deleted records are gone — soft deletes allow
+recovery. Both modules use `SoftDeletes`.
+
+### Why is the job retry count set in both the job class and the worker CLI?
+The job class (`$tries = 3`) defines the *default*. The worker CLI flag
+(`--tries=3`) acts as a *ceiling*. Having both set explicitly makes the
+retry behaviour clear regardless of how the worker is invoked.
 
 ---
 

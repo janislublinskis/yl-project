@@ -189,35 +189,12 @@ All common tasks are available via `make`:
 ```bash
 make build          # Build and start everything
 make test           # Run full test suite
-make arch-test      # Verify module boundaries and naming conventions
+make test-arch      # Verify module boundaries and naming conventions
 make logs           # Tail all container logs
-make shell-server3  # Open a shell in server3
+make sh-server3  # Open a shell in server3
 make reset          # Stop and wipe all volumes
 ```
 
 See the `Makefile` for all available targets.
 
----
-
-## Design Decisions
-
-### Why path repositories instead of a private Packagist?
-Path repos resolve locally — no need to publish packages publicly during
-development. In production you would switch to a private registry
-(e.g. Private Packagist, Satis) and the `composer.json` would simply change
-the repository URL.
-
-### Why one Dockerfile with an ARG instead of three separate Dockerfiles?
-DRY — a single Dockerfile is easier to maintain. The `ARG SERVER` build
-argument selects which `composer.json` gets copied into the image at build time.
-Docker layer caching means only the changed composer.json layer rebuilds.
-
-### Why soft deletes?
-Soft deletes protect against accidental data loss and provide a natural
-audit trail. Permanently deleted records are gone — soft deletes allow
-recovery. Both modules use `SoftDeletes`.
-
-### Why is the job retry count set in both the job class and the worker CLI?
-The job class (`$tries = 3`) defines the *default*. The worker CLI flag
-(`--tries=3`) acts as a *ceiling*. Having both set explicitly makes the
-retry behaviour clear regardless of how the worker is invoked.
+For implementation rationale and design decisions see `COMMENTARIES.md`.
