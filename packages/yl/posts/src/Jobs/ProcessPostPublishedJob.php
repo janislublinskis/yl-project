@@ -96,25 +96,29 @@ class ProcessPostPublishedJob implements ShouldQueue
     }
 
     /**
-     * Flush the page cache for the newly published post.
+     * Append a cache flush entry to the cache log.
      *
      * Requirement 8: "perform a shell command"
      *
-     * In production this might call `nginx -s reload`, a Varnish purge,
-     * or a CDN invalidation CLI. Here we write a log entry safely.
+     * In production this would invoke `nginx -s reload`, a Varnish purge,
+     * or a CDN invalidation CLI. Here we write a log entry using native PHP
+     * file I/O — no shell process or injection surface needed for a file append.
      */
     private function flushPageCache(): void
     {
-        $slug    = escapeshellarg($this->post->slug);
-        $timestamp = escapeshellarg(now()->toIso8601String());
+        $entry = sprintf(
+            "Cache flushed for post %s at %s\n",
+            $this->post->slug,
+            now()->toIso8601String()
+        );
 
-        // escapeshellarg ensures the slug cannot be used for command injection.
-        $command = "echo \"Cache flushed for post {$slug} at {$timestamp}\" "
-                 . '>> /var/www/html/storage/logs/cache.log';
+        file_put_contents(
+            storage_path('logs/cache.log'),
+            $entry,
+            FILE_APPEND | LOCK_EX
+        );
 
-        shell_exec($command);
-
-        Log::info('Page cache flush command executed', ['post_id' => $this->post->id]);
+        Log::info('Page cache flush executed', ['post_id' => $this->post->id]);
     }
 
     /**

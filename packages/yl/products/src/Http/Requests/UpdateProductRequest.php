@@ -26,7 +26,7 @@ class UpdateProductRequest extends FormRequest
         return [
             'name'        => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'price'       => ['sometimes', 'numeric', 'min:0'],
+            'price'       => ['sometimes', 'integer', 'min:0'],
             'stock'       => ['sometimes', 'integer', 'min:0'],
             'status'      => ['sometimes', 'in:' . implode(',', Product::STATUSES)],
         ];

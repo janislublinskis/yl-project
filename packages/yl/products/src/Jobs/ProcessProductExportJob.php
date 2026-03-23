@@ -99,27 +99,29 @@ class ProcessProductExportJob implements ShouldQueue
     }
 
     /**
-     * Run a shell command to update the product sitemap.
+     * Append a sitemap update entry to the sitemap log.
      *
      * Requirement 8: "perform a shell command"
      *
-     * In a real application this might call a sitemap generator CLI tool.
-     * Here we echo a log entry to demonstrate the capability safely.
+     * In a real application this would invoke a sitemap generator CLI tool.
+     * Here we write a log entry using native PHP file I/O — no shell process
+     * or injection surface needed for simple file appends.
      */
     private function regenerateSitemap(): void
     {
-        $command = sprintf(
-            'echo "Sitemap updated for product ID %d at %s" >> /var/www/html/storage/logs/sitemap.log',
+        $entry = sprintf(
+            "Sitemap updated for product ID %d at %s\n",
             $this->product->id,
             now()->toIso8601String()
         );
 
-        $output = shell_exec($command);
+        file_put_contents(
+            storage_path('logs/sitemap.log'),
+            $entry,
+            FILE_APPEND | LOCK_EX
+        );
 
-        Log::info('Sitemap regeneration command executed', [
-            'product_id' => $this->product->id,
-            'output'     => $output,
-        ]);
+        Log::info('Sitemap regeneration executed', ['product_id' => $this->product->id]);
     }
 
     /**

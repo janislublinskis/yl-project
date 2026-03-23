@@ -24,9 +24,9 @@ return new class extends Migration
             // can be created without it.
             $table->text('description')->nullable();
 
-            // DECIMAL preserves monetary precision; float would introduce
-            // floating-point rounding errors.
-            $table->decimal('price', 10, 2);
+            // Price stored as an integer in the smallest currency unit (e.g. cents).
+            // Integer arithmetic avoids floating-point rounding errors entirely.
+            $table->unsignedInteger('price');
 
             $table->unsignedInteger('stock')->default(0);
 
