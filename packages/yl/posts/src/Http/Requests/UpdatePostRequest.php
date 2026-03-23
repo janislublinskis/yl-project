@@ -2,8 +2,11 @@
 
 namespace Yl\Posts\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
+use Yl\Helper\Http\Response\ApiResponse;
 use Yl\Posts\Models\Post;
 
 class UpdatePostRequest extends FormRequest
@@ -26,5 +29,12 @@ class UpdatePostRequest extends FormRequest
             'status'       => ['sometimes', 'in:' . implode(',', Post::STATUSES)],
             'published_at' => ['nullable', 'date'],
         ];
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(
+            ApiResponse::validationError($validator->errors()->toArray())
+        );
     }
 }

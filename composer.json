@@ -24,9 +24,7 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^11.5",
-        "yl/helper": "*",
-        "yl/posts": "*",
-        "yl/products": "*"
+        "phparkitect/phparkitect": "^0.8"
     },
     "autoload": {
         "psr-4": {

@@ -2,10 +2,15 @@
 
 namespace Yl\Helper\Tests;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Orchestra\Testbench\TestCase as BaseTestCase;
+use Yl\Helper\HelperServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
-    use RefreshDatabase;
+    protected function getPackageProviders($app): array
+    {
+        return [
+            HelperServiceProvider::class,
+        ];
+    }
 }

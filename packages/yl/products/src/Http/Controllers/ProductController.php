@@ -44,12 +44,15 @@ class ProductController extends BaseApiController
             $query->where('status', request('status'));
         }
 
-        $products = $query->paginate(15);
+        $paginator = $query->paginate(15);
 
-        return $this->success(
-            ProductResource::collection($products),
-            'Products retrieved successfully'
-        );
+        return $this->success([
+            'data'         => ProductResource::collection($paginator->items())->toArray(request()),
+            'total'        => $paginator->total(),
+            'per_page'     => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+            'last_page'    => $paginator->lastPage(),
+        ], 'Products retrieved successfully');
     }
 
     /**

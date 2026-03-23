@@ -2,9 +2,9 @@
 
 namespace Yl\Helper\Http\Controllers;
 
-use HttpResponseException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Validation\Validator;
@@ -55,7 +55,7 @@ abstract class BaseApiController extends Controller
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(
-            ApiResponse::error('Validation failed', 422, $validator->errors()->toArray())
+            ApiResponse::validationError($validator->errors()->toArray())
         );
     }
 }

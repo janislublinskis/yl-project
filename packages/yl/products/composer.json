@@ -12,7 +12,8 @@
     "require-dev": {
         "phpunit/phpunit": "^11.5",
         "fakerphp/faker": "^1.23",
-        "orchestra/testbench": "^9.0"
+        "orchestra/testbench": "^9.0",
+        "phparkitect/phparkitect": "^0.8"
     },
     "autoload": {
         "psr-4": {

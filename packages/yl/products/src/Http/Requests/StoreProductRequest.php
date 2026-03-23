@@ -2,7 +2,10 @@
 
 namespace Yl\Products\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Yl\Helper\Http\Response\ApiResponse;
 use Yl\Products\Models\Product;
 
 /**
@@ -27,5 +30,12 @@ class StoreProductRequest extends FormRequest
             'stock'       => ['required', 'integer', 'min:0'],
             'status'      => ['sometimes', 'in:' . implode(',', Product::STATUSES)],
         ];
+    }
+
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(
+            ApiResponse::validationError($validator->errors()->toArray())
+        );
     }
 }

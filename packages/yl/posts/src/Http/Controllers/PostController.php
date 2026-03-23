@@ -43,10 +43,15 @@ class PostController extends BaseApiController
             $query->where('status', request('status'));
         }
 
-        return $this->success(
-            PostResource::collection($query->paginate(15)),
-            'Posts retrieved successfully'
-        );
+        $paginator = $query->paginate(15);
+
+        return $this->success([
+            'data'         => PostResource::collection($paginator->items())->toArray(request()),
+            'total'        => $paginator->total(),
+            'per_page'     => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+            'last_page'    => $paginator->lastPage(),
+        ], 'Posts retrieved successfully');
     }
 
     /**
